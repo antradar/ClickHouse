@@ -1,3 +1,6 @@
+---
+slug: /zh/operations/system-tables/clusters
+---
 # system.clusters{#system-clusters}
 
 包含有关配置文件中可用的集群及其中的服务器的信息。
@@ -24,4 +27,4 @@
 -   [distributed_replica_error_cap设置](../../operations/settings/settings.md#settings-distributed_replica_error_cap)
 -   [distributed_replica_error_half_life设置](../../operations/settings/settings.md#settings-distributed_replica_error_half_life)
 
-[原文](https://clickhouse.tech/docs/zh/operations/system-tables/clusters) <!--hide-->
+[原文](https://clickhouse.com/docs/zh/operations/system-tables/clusters) <!--hide-->

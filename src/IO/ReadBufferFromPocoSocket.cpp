@@ -1,7 +1,8 @@
 #include <Poco/Net/NetException.h>
 
+#include <base/scope_guard.h>
+
 #include <IO/ReadBufferFromPocoSocket.h>
-#include <IO/TimeoutSetter.h>
 #include <Common/Exception.h>
 #include <Common/NetException.h>
 #include <Common/Stopwatch.h>
@@ -28,6 +29,7 @@ namespace ErrorCodes
     extern const int NETWORK_ERROR;
     extern const int SOCKET_TIMEOUT;
     extern const int CANNOT_READ_FROM_SOCKET;
+    extern const int LOGICAL_ERROR;
 }
 
 
@@ -35,6 +37,12 @@ bool ReadBufferFromPocoSocket::nextImpl()
 {
     ssize_t bytes_read = 0;
     Stopwatch watch;
+
+    SCOPE_EXIT({
+        // / NOTE: it is quite inaccurate on high loads since the thread could be replaced by another one
+        ProfileEvents::increment(ProfileEvents::NetworkReceiveElapsedMicroseconds, watch.elapsedMicroseconds());
+        ProfileEvents::increment(ProfileEvents::NetworkReceiveBytes, bytes_read);
+    });
 
     /// Add more details to exceptions.
     try
@@ -47,7 +55,10 @@ bool ReadBufferFromPocoSocket::nextImpl()
         while (async_callback && !socket.poll(0, Poco::Net::Socket::SELECT_READ))
             async_callback(socket.impl()->sockfd(), socket.getReceiveTimeout(), socket_description);
 
-        bytes_read = socket.impl()->receiveBytes(internal_buffer.begin(), internal_buffer.size());
+        if (internal_buffer.size() > INT_MAX)
+            throw Exception(ErrorCodes::LOGICAL_ERROR, "Buffer overflow");
+
+        bytes_read = socket.impl()->receiveBytes(internal_buffer.begin(), static_cast<int>(internal_buffer.size()));
     }
     catch (const Poco::Net::NetException & e)
     {
@@ -55,7 +66,9 @@ bool ReadBufferFromPocoSocket::nextImpl()
     }
     catch (const Poco::TimeoutException &)
     {
-        throw NetException("Timeout exceeded while reading from socket (" + peer_address.toString() + ")", ErrorCodes::SOCKET_TIMEOUT);
+        throw NetException(fmt::format("Timeout exceeded while reading from socket ({}, {} ms)",
+            peer_address.toString(),
+            socket.impl()->getReceiveTimeout().totalMilliseconds()), ErrorCodes::SOCKET_TIMEOUT);
     }
     catch (const Poco::IOException & e)
     {
@@ -64,10 +77,6 @@ bool ReadBufferFromPocoSocket::nextImpl()
 
     if (bytes_read < 0)
         throw NetException("Cannot read from socket (" + peer_address.toString() + ")", ErrorCodes::CANNOT_READ_FROM_SOCKET);
-
-    /// NOTE: it is quite inaccurate on high loads since the thread could be replaced by another one
-    ProfileEvents::increment(ProfileEvents::NetworkReceiveElapsedMicroseconds, watch.elapsedMicroseconds());
-    ProfileEvents::increment(ProfileEvents::NetworkReceiveBytes, bytes_read);
 
     if (bytes_read)
         working_buffer.resize(bytes_read);

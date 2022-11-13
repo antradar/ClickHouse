@@ -1,6 +1,7 @@
 ---
-toc_priority: 35
-toc_title: PostgreSQL
+slug: /ru/engines/database-engines/postgresql
+sidebar_position: 35
+sidebar_label: PostgreSQL
 ---
 
 # PostgreSQL {#postgresql}
@@ -15,7 +16,7 @@ toc_title: PostgreSQL
 
 ``` sql
 CREATE DATABASE test_database
-ENGINE = PostgreSQL('host:port', 'database', 'user', 'password'[, `use_table_cache`]);
+ENGINE = PostgreSQL('host:port', 'database', 'user', 'password'[, `schema`, `use_table_cache`]);
 ```
 
 **Параметры движка**
@@ -24,11 +25,12 @@ ENGINE = PostgreSQL('host:port', 'database', 'user', 'password'[, `use_table_cac
 -   `database` — имя удаленной БД.
 -   `user` — пользователь PostgreSQL.
 -   `password` — пароль пользователя.
+ -  `schema` — схема PostgreSQL.
 -   `use_table_cache` —  определяет кеширование структуры таблиц БД. Необязательный параметр. Значение по умолчанию: `0`.
 
 ## Поддерживаемые типы данных {#data_types-support}
 
-| PostgerSQL       | ClickHouse                                                   |
+| PostgreSQL       | ClickHouse                                                   |
 |------------------|--------------------------------------------------------------|
 | DATE             | [Date](../../sql-reference/data-types/date.md)               |
 | TIMESTAMP        | [DateTime](../../sql-reference/data-types/datetime.md)       |
@@ -135,4 +137,4 @@ DESCRIBE TABLE test_database.test_table;
 └────────┴───────────────────┘
 ```
 
-[Оригинальная статья](https://clickhouse.tech/docs/ru/database-engines/postgresql/) <!--hide-->
+[Оригинальная статья](https://clickhouse.com/docs/ru/database-engines/postgresql/) <!--hide-->

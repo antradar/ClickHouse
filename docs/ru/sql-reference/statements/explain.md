@@ -1,6 +1,7 @@
 ---
-toc_priority: 39
-toc_title: EXPLAIN
+slug: /ru/sql-reference/statements/explain
+sidebar_position: 39
+sidebar_label: EXPLAIN
 ---
 
 # EXPLAIN {#explain}
@@ -133,9 +134,9 @@ Union
           ReadFromStorage (SystemNumbers)
 ```
 
-!!! note "Примечание"
+    :::note "Примечание"
     Оценка стоимости выполнения шага и запроса не поддерживается.
-
+    :::
 При `json = 1` шаги выполнения запроса выводятся в формате JSON. Каждый узел — это словарь, в котором всегда есть ключи `Node Type` и `Plans`. `Node Type` — это строка с именем шага. `Plans` — это массив с описаниями дочерних шагов. Другие дополнительные ключи могут быть добавлены в зависимости от типа узла и настроек.
 
 Пример:
@@ -385,4 +386,32 @@ ExpressionTransform
             NumbersMt × 2 0 → 1
 ```
 
-[Оригинальная статья](https://clickhouse.tech/docs/ru/sql-reference/statements/explain/) <!--hide-->
+### EXPLAIN ESTIMATE {#explain-estimate}
+
+ Отображает оценки числа строк, засечек и кусков, которые будут прочитаны при выполнении запроса. Применяется для таблиц семейства [MergeTree](../../engines/table-engines/mergetree-family/mergetree.md#table_engines-mergetree). 
+
+**Пример**
+
+Создадим таблицу:
+
+```sql
+CREATE TABLE ttt (i Int64) ENGINE = MergeTree() ORDER BY i SETTINGS index_granularity = 16, write_final_mark = 0;
+INSERT INTO ttt SELECT number FROM numbers(128);
+OPTIMIZE TABLE ttt;
+```
+
+Запрос:
+
+```sql
+EXPLAIN ESTIMATE SELECT * FROM ttt;
+```
+
+Результат:
+
+```text
+┌─database─┬─table─┬─parts─┬─rows─┬─marks─┐
+│ default  │ ttt   │     1 │  128 │     8 │
+└──────────┴───────┴───────┴──────┴───────┘
+```
+
+[Оригинальная статья](https://clickhouse.com/docs/ru/sql-reference/statements/explain/) <!--hide-->

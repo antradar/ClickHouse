@@ -102,7 +102,7 @@ namespace
             // This range is hardcoded below
             if (precision_param > 20 || precision_param < 12)
                 throw Exception(
-                    "Parameter for aggregate function " + name + " is out or range: [12, 20].", ErrorCodes::ARGUMENT_OUT_OF_BOUND);
+                    "Parameter for aggregate function " + name + " is out of range: [12, 20].", ErrorCodes::ARGUMENT_OUT_OF_BOUND);
             precision = precision_param;
         }
 
@@ -131,7 +131,7 @@ namespace
                 return createAggregateFunctionWithHashType<20>(use_64_bit_hash, argument_types, params);
         }
 
-        __builtin_unreachable();
+        UNREACHABLE();
     }
 
 }

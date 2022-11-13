@@ -1,5 +1,4 @@
-<?xml version="1.0"?>
-<yandex>
+<clickhouse>
     <storage_configuration>
         <disks>
             <hdfs>
@@ -8,4 +7,4 @@
             </hdfs>
         </disks>
     </storage_configuration>
-</yandex>
+</clickhouse>

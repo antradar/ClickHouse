@@ -1,6 +1,4 @@
 #include <IO/ZlibDeflatingWriteBuffer.h>
-#include <Common/MemorySanitizer.h>
-#include <Common/MemoryTracker.h>
 #include <Common/Exception.h>
 
 
@@ -20,8 +18,7 @@ ZlibDeflatingWriteBuffer::ZlibDeflatingWriteBuffer(
         size_t buf_size,
         char * existing_memory,
         size_t alignment)
-    : BufferWithOwnMemory<WriteBuffer>(buf_size, existing_memory, alignment)
-    , out(std::move(out_))
+    : WriteBufferWithOwnMemoryDecorator(std::move(out_), buf_size, existing_memory, alignment)
 {
     zstr.zalloc = nullptr;
     zstr.zfree = nullptr;
@@ -46,34 +43,13 @@ ZlibDeflatingWriteBuffer::ZlibDeflatingWriteBuffer(
         throw Exception(std::string("deflateInit2 failed: ") + zError(rc) + "; zlib version: " + ZLIB_VERSION, ErrorCodes::ZLIB_DEFLATE_FAILED);
 }
 
-ZlibDeflatingWriteBuffer::~ZlibDeflatingWriteBuffer()
-{
-    /// FIXME move final flush into the caller
-    MemoryTracker::LockExceptionInThread lock(VariableContext::Global);
-
-    finish();
-
-    try
-    {
-        int rc = deflateEnd(&zstr);
-        if (rc != Z_OK)
-            throw Exception(std::string("deflateEnd failed: ") + zError(rc), ErrorCodes::ZLIB_DEFLATE_FAILED);
-    }
-    catch (...)
-    {
-        /// It is OK not to terminate under an error from deflateEnd()
-        /// since all data already written to the stream.
-        tryLogCurrentException(__PRETTY_FUNCTION__);
-    }
-}
-
 void ZlibDeflatingWriteBuffer::nextImpl()
 {
     if (!offset())
         return;
 
     zstr.next_in = reinterpret_cast<unsigned char *>(working_buffer.begin());
-    zstr.avail_in = offset();
+    zstr.avail_in = static_cast<unsigned>(offset());
 
     try
     {
@@ -81,7 +57,7 @@ void ZlibDeflatingWriteBuffer::nextImpl()
         {
             out->nextIfAtEnd();
             zstr.next_out = reinterpret_cast<unsigned char *>(out->position());
-            zstr.avail_out = out->buffer().end() - out->position();
+            zstr.avail_out = static_cast<unsigned>(out->buffer().end() - out->position());
 
             int rc = deflate(&zstr, Z_NO_FLUSH);
             out->position() = out->buffer().end() - zstr.avail_out;
@@ -99,27 +75,19 @@ void ZlibDeflatingWriteBuffer::nextImpl()
     }
 }
 
-void ZlibDeflatingWriteBuffer::finish()
+ZlibDeflatingWriteBuffer::~ZlibDeflatingWriteBuffer()
 {
-    if (finished)
-        return;
-
     try
     {
-        finishImpl();
-        out->finalize();
-        finished = true;
+        finalize();
     }
     catch (...)
     {
-        /// Do not try to flush next time after exception.
-        out->position() = out->buffer().begin();
-        finished = true;
-        throw;
+        tryLogCurrentException(__PRETTY_FUNCTION__);
     }
 }
 
-void ZlibDeflatingWriteBuffer::finishImpl()
+void ZlibDeflatingWriteBuffer::finalizeBefore()
 {
     next();
 
@@ -128,7 +96,7 @@ void ZlibDeflatingWriteBuffer::finishImpl()
     {
         out->nextIfAtEnd();
         zstr.next_out = reinterpret_cast<unsigned char *>(out->position());
-        zstr.avail_out = out->buffer().end() - out->position();
+        zstr.avail_out = static_cast<unsigned>(out->buffer().end() - out->position());
 
         int rc = deflate(&zstr, Z_FULL_FLUSH);
         out->position() = out->buffer().end() - zstr.avail_out;
@@ -142,7 +110,7 @@ void ZlibDeflatingWriteBuffer::finishImpl()
     {
         out->nextIfAtEnd();
         zstr.next_out = reinterpret_cast<unsigned char *>(out->position());
-        zstr.avail_out = out->buffer().end() - out->position();
+        zstr.avail_out = static_cast<unsigned>(out->buffer().end() - out->position());
 
         int rc = deflate(&zstr, Z_FINISH);
         out->position() = out->buffer().end() - zstr.avail_out;
@@ -153,7 +121,23 @@ void ZlibDeflatingWriteBuffer::finishImpl()
         }
 
         if (rc != Z_OK)
-            throw Exception(std::string("deflate finish failed: ") + zError(rc), ErrorCodes::ZLIB_DEFLATE_FAILED);
+            throw Exception(std::string("deflate finalizeImpl() failed: ") + zError(rc), ErrorCodes::ZLIB_DEFLATE_FAILED);
+    }
+}
+
+void ZlibDeflatingWriteBuffer::finalizeAfter()
+{
+    try
+    {
+        int rc = deflateEnd(&zstr);
+        if (rc != Z_OK)
+            throw Exception(std::string("deflateEnd failed: ") + zError(rc), ErrorCodes::ZLIB_DEFLATE_FAILED);
+    }
+    catch (...)
+    {
+        /// It is OK not to terminate under an error from deflateEnd()
+        /// since all data already written to the stream.
+        tryLogCurrentException(__PRETTY_FUNCTION__);
     }
 }
 

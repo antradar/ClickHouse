@@ -13,6 +13,7 @@
 /build_*
 /build-*
 /tests/venv
+/obj-x86_64-linux-gnu/
 
 # logs
 *.log
@@ -32,7 +33,6 @@
 /docs/zh/single.md
 /docs/ja/single.md
 /docs/fa/single.md
-/docs/en/development/cmake-in-clickhouse.md
 
 # callgrind files
 callgrind.out.*
@@ -58,6 +58,10 @@ cmake_install.cmake
 CTestTestfile.cmake
 *.a
 *.o
+*.so
+*.dll
+*.lib
+*.dylib
 cmake-build-*
 
 # Python cache
@@ -76,6 +80,7 @@ core
 vgcore*
 
 *.deb
+*.tar.zst
 *.build
 *.upload
 *.changes
@@ -149,3 +154,6 @@ website/package-lock.json
 /programs/server/metadata
 /programs/server/store
 
+# temporary test files
+tests/queries/0_stateless/test_*
+tests/queries/0_stateless/*.binary

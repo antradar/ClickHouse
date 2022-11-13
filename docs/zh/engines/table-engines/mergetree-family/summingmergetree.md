@@ -1,3 +1,6 @@
+---
+slug: /zh/engines/table-engines/mergetree-family/summingmergetree
+---
 # SummingMergeTree {#summingmergetree}
 
 该引擎继承自 [MergeTree](mergetree.md)。区别在于，当合并 `SummingMergeTree` 表的数据片段时，ClickHouse 会把所有具有相同主键的行合并为一行，该行包含了被合并的行中具有数值数据类型的列的汇总值。如果主键的组合方式使得单个键值对应于大量的行，则可以显著的减少存储空间并加快数据查询的速度。
@@ -34,7 +37,7 @@
 
 <summary>已弃用的建表方法</summary>
 
-!!! attention "注意"
+    :::info "注意"
     不要在新项目中使用该方法，可能的话，请将旧项目切换到上述方法。
 
     CREATE TABLE [IF NOT EXISTS] [db.]table_name [ON CLUSTER cluster]
@@ -121,4 +124,4 @@ ClickHouse 会按片段合并数据，以至于不同的数据片段中会包含
 
 对于嵌套数据结构，你无需在列的元组中指定列以进行汇总。
 
-[来源文章](https://clickhouse.tech/docs/en/operations/table_engines/summingmergetree/) <!--hide-->
+[来源文章](https://clickhouse.com/docs/en/operations/table_engines/summingmergetree/) <!--hide-->

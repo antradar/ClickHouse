@@ -2,7 +2,7 @@
 #include <Common/Exception.h>
 #include <IO/WriteHelpers.h>
 #include <IO/ReadHelpers.h>
-#include <common/logger_useful.h>
+#include <Common/logger_useful.h>
 
 
 namespace DB
@@ -41,7 +41,7 @@ static void append(std::vector<String> & to, const std::vector<String> & what, s
 static bool parseNumber(const String & description, size_t l, size_t r, size_t & res)
 {
     res = 0;
-    for (size_t pos = l; pos < r; pos ++)
+    for (size_t pos = l; pos < r; ++pos)
     {
         if (!isNumericASCII(description[pos]))
             return false;
@@ -82,8 +82,8 @@ std::vector<String> parseRemoteDescription(const String & description, size_t l,
         /// Either the numeric interval (8..10) or equivalent expression in brackets
         if (description[i] == '{')
         {
-            int cnt = 1;
-            int last_dot = -1; /// The rightmost pair of points, remember the index of the right of the two
+            ssize_t cnt = 1;
+            ssize_t last_dot = -1; /// The rightmost pair of points, remember the index of the right of the two
             size_t m;
             std::vector<String> buffer;
             bool have_splitter = false;

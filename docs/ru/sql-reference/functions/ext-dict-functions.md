@@ -1,10 +1,12 @@
 ---
-toc_priority: 58
-toc_title: "Функции для работы с внешними словарями"
+slug: /ru/sql-reference/functions/ext-dict-functions
+sidebar_position: 58
+sidebar_label: "Функции для работы с внешними словарями"
 ---
 
-!!! attention "Внимание"
+:::note "Внимание"
     Для словарей, созданных с помощью [DDL-запросов](../../sql-reference/statements/create/dictionary.md), в параметре `dict_name` указывается полное имя словаря вместе с базой данных, например: `<database>.<dict_name>`. Если база данных не указана, используется текущая.
+:::
 
 # Функции для работы с внешними словарями {#ext_dict_functions}
 
@@ -53,7 +55,7 @@ dictGetOrNull('dict_name', attr_name, id_expr)
 Настройка внешнего словаря:
 
 ``` xml
-<yandex>
+<clickhouse>
     <dictionary>
         <name>ext-dict-test</name>
         <source>
@@ -77,7 +79,7 @@ dictGetOrNull('dict_name', attr_name, id_expr)
         </structure>
         <lifetime>0</lifetime>
     </dictionary>
-</yandex>
+</clickhouse>
 ```
 
 Выполним запрос:
@@ -113,7 +115,7 @@ LIMIT 3;
 Настройка внешнего словаря:
 
 ``` xml
-<yandex>
+<clickhouse>
     <dictionary>
         <name>ext-dict-mult</name>
         <source>
@@ -142,7 +144,7 @@ LIMIT 3;
         </structure>
         <lifetime>0</lifetime>
     </dictionary>
-</yandex>
+</clickhouse>
 ```
 
 Выполним запрос:

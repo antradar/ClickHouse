@@ -39,6 +39,8 @@ public:
     size_t getNumberOfArguments() const override { return 0; }
     bool useDefaultImplementationForConstants() const override { return true; }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
+
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
         if (arguments.empty())
@@ -231,7 +233,7 @@ void FunctionArrayUniq::executeMethodImpl(
             method.emplaceKey(set, j, pool);
         }
 
-        res_values[i] = set.size() + found_null;
+        res_values[i] = static_cast<UInt32>(set.size() + found_null);
         prev_off = off;
     }
 }
@@ -313,7 +315,7 @@ void FunctionArrayUniq::executeHashed(
 }
 
 
-void registerFunctionArrayUniq(FunctionFactory & factory)
+REGISTER_FUNCTION(ArrayUniq)
 {
     factory.registerFunction<FunctionArrayUniq>();
 }

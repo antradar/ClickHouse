@@ -1,10 +1,10 @@
-#include <common/demangle.h>
+#include <base/demangle.h>
 #include <Columns/ColumnString.h>
 #include <DataTypes/DataTypeString.h>
 #include <Functions/IFunction.h>
 #include <Functions/FunctionFactory.h>
 #include <IO/WriteHelpers.h>
-#include <Access/AccessFlags.h>
+#include <Access/Common/AccessFlags.h>
 #include <Interpreters/Context.h>
 
 
@@ -41,6 +41,11 @@ public:
         return 1;
     }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override
+    {
+        return true;
+    }
+
     DataTypePtr getReturnTypeImpl(const ColumnsWithTypeAndName & arguments) const override
     {
         if (arguments.size() != 1)
@@ -73,15 +78,15 @@ public:
 
         for (size_t i = 0; i < input_rows_count; ++i)
         {
-            StringRef source = column_concrete->getDataAtWithTerminatingZero(i);
+            StringRef source = column_concrete->getDataAt(i);
             auto demangled = tryDemangle(source.data);
             if (demangled)
             {
-                result_column->insertDataWithTerminatingZero(demangled.get(), strlen(demangled.get()) + 1);
+                result_column->insertData(demangled.get(), strlen(demangled.get()));
             }
             else
             {
-                result_column->insertDataWithTerminatingZero(source.data, source.size);
+                result_column->insertData(source.data, source.size);
             }
         }
 
@@ -91,10 +96,9 @@ public:
 
 }
 
-void registerFunctionDemangle(FunctionFactory & factory)
+REGISTER_FUNCTION(Demangle)
 {
     factory.registerFunction<FunctionDemangle>();
 }
 
 }
-

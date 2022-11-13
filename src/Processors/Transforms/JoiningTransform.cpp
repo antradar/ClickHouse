@@ -1,9 +1,8 @@
 #include <Processors/Transforms/JoiningTransform.h>
 #include <Interpreters/ExpressionAnalyzer.h>
-#include <Interpreters/join_common.h>
-#include <DataTypes/DataTypesNumber.h>
-#include <DataStreams/IBlockInputStream.h>
+#include <Interpreters/JoinUtils.h>
 
+#include <Common/logger_useful.h>
 
 namespace DB
 {
@@ -15,19 +14,23 @@ namespace ErrorCodes
 
 Block JoiningTransform::transformHeader(Block header, const JoinPtr & join)
 {
+    LOG_DEBUG(&Poco::Logger::get("JoiningTransform"), "Before join block: '{}'", header.dumpStructure());
+    join->checkTypesOfKeys(header);
     ExtraBlockPtr tmp;
     join->joinBlock(header, tmp);
+    LOG_DEBUG(&Poco::Logger::get("JoiningTransform"), "After join block: '{}'", header.dumpStructure());
     return header;
 }
 
 JoiningTransform::JoiningTransform(
-    Block input_header,
+    const Block & input_header,
+    const Block & output_header,
     JoinPtr join_,
     size_t max_block_size_,
     bool on_totals_,
     bool default_totals_,
     FinishCounterPtr finish_counter_)
-    : IProcessor({input_header}, {transformHeader(input_header, join_)})
+    : IProcessor({input_header}, {output_header})
     , join(std::move(join_))
     , on_totals(on_totals_)
     , default_totals(default_totals_)
@@ -114,7 +117,7 @@ void JoiningTransform::work()
     }
     else
     {
-        if (!non_joined_stream)
+        if (!non_joined_blocks)
         {
             if (!finish_counter || !finish_counter->isLast())
             {
@@ -122,15 +125,16 @@ void JoiningTransform::work()
                 return;
             }
 
-            non_joined_stream = join->createStreamWithNonJoinedRows(outputs.front().getHeader(), max_block_size);
-            if (!non_joined_stream)
+            non_joined_blocks = join->getNonJoinedBlocks(
+                inputs.front().getHeader(), outputs.front().getHeader(), max_block_size);
+            if (!non_joined_blocks)
             {
                 process_non_joined = false;
                 return;
             }
         }
 
-        auto block = non_joined_stream->read();
+        Block block = non_joined_blocks->read();
         if (!block)
         {
             process_non_joined = false;

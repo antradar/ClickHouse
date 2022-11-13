@@ -36,6 +36,7 @@ public:
 
     size_t getNumberOfArguments() const override { return 1; }
     bool useDefaultImplementationForConstants() const override { return true; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
@@ -63,8 +64,8 @@ public:
 
         for (size_t i = 0; i < count; ++i)
         {
-            StringRef encoded_string = encoded->getDataAt(i);
-            geohashDecode(encoded_string.data, encoded_string.size, &lon_data[i], &lat_data[i]);
+            std::string_view encoded_string = encoded->getDataAt(i).toView();
+            geohashDecode(encoded_string.data(), encoded_string.size(), &lon_data[i], &lat_data[i]);
         }
 
         MutableColumns result;
@@ -92,7 +93,7 @@ public:
 
 }
 
-void registerFunctionGeohashDecode(FunctionFactory & factory)
+REGISTER_FUNCTION(GeohashDecode)
 {
     factory.registerFunction<FunctionGeohashDecode>();
 }

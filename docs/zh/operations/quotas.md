@@ -1,3 +1,6 @@
+---
+slug: /zh/operations/quotas
+---
 # 配额 {#quotas}
 
 配额允许您在一段时间内限制资源使用情况，或者只是跟踪资源的使用。
@@ -102,4 +105,4 @@ For distributed query processing, the accumulated amounts are stored on the requ
 
 服务器重新启动时，将重置配额。
 
-[原始文章](https://clickhouse.tech/docs/en/operations/quotas/) <!--hide-->
+[原始文章](https://clickhouse.com/docs/en/operations/quotas/) <!--hide-->

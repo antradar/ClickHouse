@@ -1,7 +1,7 @@
 ---
+slug: /ru/faq/general/ne-tormozit
 title: "What does “не тормозит” mean?"
-toc_hidden: true
-toc_priority: 11
+sidebar_position: 11
 ---
 
 # Что значит “Не тормозит”? {#what-does-ne-tormozit-mean}
@@ -22,4 +22,4 @@ toc_priority: 11
 
 ![iframe](https://www.youtube.com/embed/bSyQahMVZ7w)
 
-P.S. Эти футболки не продаются, а распространяются бесплатно на большинстве митапов [ClickHouse](https://clickhouse.tech/#meet), обычно в награду за самые интересные вопросы или другие виды активного участия.
+P.S. Эти футболки не продаются, а распространяются бесплатно на большинстве митапов [ClickHouse](https://clickhouse.com/#meet), обычно в награду за самые интересные вопросы или другие виды активного участия.

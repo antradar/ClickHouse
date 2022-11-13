@@ -4,7 +4,7 @@
 #include <Columns/ColumnArray.h>
 #include <Functions/FunctionFactory.h>
 #include <Functions/FunctionHelpers.h>
-#include <common/map.h>
+#include <base/map.h>
 
 
 namespace DB
@@ -77,6 +77,8 @@ public:
         return true;
     }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
+
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
         if (!isStringOrFixedString(arguments[0])
@@ -146,9 +148,9 @@ private:
 
 }
 
-void registerFunctionReverse(FunctionFactory & factory)
+REGISTER_FUNCTION(Reverse)
 {
-    factory.registerFunction<ReverseOverloadResolver>(FunctionFactory::CaseInsensitive);
+    factory.registerFunction<ReverseOverloadResolver>({}, FunctionFactory::CaseInsensitive);
 }
 
 }

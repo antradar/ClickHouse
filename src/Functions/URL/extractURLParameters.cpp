@@ -19,6 +19,7 @@ public:
     static constexpr auto name = "extractURLParameters";
     static String getName() { return name; }
 
+    static bool isVariadic() { return false; }
     static size_t getNumberOfArguments() { return 1; }
 
     static void checkArguments(const DataTypes & arguments)
@@ -34,6 +35,12 @@ public:
     static size_t getStringsArgumentPosition()
     {
         return 0;
+    }
+
+    /// Returns the position of the possible max_substrings argument. std::nullopt means max_substrings argument is disabled in current function.
+    static std::optional<size_t> getMaxSubstringsArgumentPosition()
+    {
+        return std::nullopt;
     }
 
     /// Called for each next string.
@@ -96,7 +103,7 @@ public:
 struct NameExtractURLParameters { static constexpr auto name = "extractURLParameters"; };
 using FunctionExtractURLParameters = FunctionTokens<ExtractURLParametersImpl>;
 
-void registerFunctionExtractURLParameters(FunctionFactory & factory)
+REGISTER_FUNCTION(ExtractURLParameters)
 {
     factory.registerFunction<FunctionExtractURLParameters>();
 }

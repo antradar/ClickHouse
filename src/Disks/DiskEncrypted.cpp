@@ -4,8 +4,12 @@
 #include <Disks/DiskFactory.h>
 #include <IO/FileEncryptionCommon.h>
 #include <IO/ReadBufferFromEncryptedFile.h>
+#include <IO/ReadBufferFromFileDecorator.h>
+#include <IO/ReadBufferFromString.h>
 #include <IO/WriteBufferFromEncryptedFile.h>
 #include <boost/algorithm/hex.hpp>
+#include <Common/quoteString.h>
+#include <Common/typeid_cast.h>
 
 
 namespace DB
@@ -75,6 +79,17 @@ namespace
 
             if (res->keys.empty())
                 throw Exception(ErrorCodes::BAD_ARGUMENTS, "No keys, an encrypted disk needs keys to work");
+
+            if (!config.has(config_prefix + ".current_key_id"))
+            {
+                /// In case of multiple keys, current_key_id is mandatory
+                if (res->keys.size() > 1)
+                    throw Exception(ErrorCodes::BAD_ARGUMENTS, "There are multiple keys in config. current_key_id is required");
+
+                /// If there is only one key with non zero ID, curren_key_id should be defined.
+                if (res->keys.size() == 1 && !res->keys.contains(0))
+                    throw Exception(ErrorCodes::BAD_ARGUMENTS, "Config has one key with non zero id. сurrent_key_id is required");
+            }
 
             res->current_key_id = config.getUInt64(config_prefix + ".current_key_id", 0);
             if (!res->keys.contains(res->current_key_id))
@@ -169,6 +184,7 @@ public:
     }
 
     UInt64 getSize() const override { return reservation->getSize(); }
+    UInt64 getUnreservedSpace() const override { return reservation->getUnreservedSpace(); }
 
     DiskPtr getDisk(size_t i) const override
     {
@@ -236,23 +252,57 @@ void DiskEncrypted::copy(const String & from_path, const std::shared_ptr<IDisk> 
     copyThroughBuffers(from_path, to_disk, to_path);
 }
 
-std::unique_ptr<ReadBufferFromFileBase> DiskEncrypted::readFile(
-    const String & path,
-    size_t buf_size,
-    size_t estimated_size,
-    size_t aio_threshold,
-    size_t mmap_threshold,
-    MMappedFileCache * mmap_cache) const
+
+void DiskEncrypted::copyDirectoryContent(const String & from_dir, const std::shared_ptr<IDisk> & to_disk, const String & to_dir)
 {
-    auto wrapped_path = wrappedPath(path);
-    auto buffer = delegate->readFile(wrapped_path, buf_size, estimated_size, aio_threshold, mmap_threshold, mmap_cache);
-    auto settings = current_settings.get();
-    FileEncryption::Header header = readHeader(*buffer);
-    String key = getKey(path, header, *settings);
-    return std::make_unique<ReadBufferFromEncryptedFile>(buf_size, std::move(buffer), key, header);
+    /// Check if we can copy the file without deciphering.
+    if (isSameDiskType(*this, *to_disk))
+    {
+        /// Disk type is the same, check if the key is the same too.
+        if (auto * to_disk_enc = typeid_cast<DiskEncrypted *>(to_disk.get()))
+        {
+            auto from_settings = current_settings.get();
+            auto to_settings = to_disk_enc->current_settings.get();
+            if (from_settings->keys == to_settings->keys)
+            {
+                /// Keys are the same so we can simply copy the encrypted file.
+                auto wrapped_from_path = wrappedPath(from_dir);
+                auto to_delegate = to_disk_enc->delegate;
+                auto wrapped_to_path = to_disk_enc->wrappedPath(to_dir);
+                delegate->copyDirectoryContent(wrapped_from_path, to_delegate, wrapped_to_path);
+                return;
+            }
+        }
+    }
+
+    if (!to_disk->exists(to_dir))
+        to_disk->createDirectories(to_dir);
+
+    /// Copy the file through buffers with deciphering.
+    copyThroughBuffers(from_dir, to_disk, to_dir);
 }
 
-std::unique_ptr<WriteBufferFromFileBase> DiskEncrypted::writeFile(const String & path, size_t buf_size, WriteMode mode)
+std::unique_ptr<ReadBufferFromFileBase> DiskEncrypted::readFile(
+    const String & path,
+    const ReadSettings & settings,
+    std::optional<size_t> read_hint,
+    std::optional<size_t> file_size) const
+{
+    auto wrapped_path = wrappedPath(path);
+    auto buffer = delegate->readFile(wrapped_path, settings, read_hint, file_size);
+    if (buffer->eof())
+    {
+        /// File is empty, that's a normal case, see DiskEncrypted::truncateFile().
+        /// There is no header so we just return `ReadBufferFromString("")`.
+        return std::make_unique<ReadBufferFromFileDecorator>(std::make_unique<ReadBufferFromString>(std::string_view{}), wrapped_path);
+    }
+    auto encryption_settings = current_settings.get();
+    FileEncryption::Header header = readHeader(*buffer);
+    String key = getKey(path, header, *encryption_settings);
+    return std::make_unique<ReadBufferFromEncryptedFile>(settings.local_fs_buffer_size, std::move(buffer), key, header);
+}
+
+std::unique_ptr<WriteBufferFromFileBase> DiskEncrypted::writeFile(const String & path, size_t buf_size, WriteMode mode, const WriteSettings &)
 {
     auto wrapped_path = wrappedPath(path);
     FileEncryption::Header header;
@@ -265,7 +315,7 @@ std::unique_ptr<WriteBufferFromFileBase> DiskEncrypted::writeFile(const String &
         if (old_file_size)
         {
             /// Append mode: we continue to use the same header.
-            auto read_buffer = delegate->readFile(wrapped_path, FileEncryption::Header::kSize);
+            auto read_buffer = delegate->readFile(wrapped_path, ReadSettings().adjustBufferSize(FileEncryption::Header::kSize));
             header = readHeader(*read_buffer);
             key = getKey(path, header, *settings);
         }

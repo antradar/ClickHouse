@@ -19,40 +19,10 @@
 namespace DB
 {
 
-NamesAndTypesList ZooKeeperLogElement::getNamesAndTypes()
+
+DataTypePtr getCoordinationErrorCodesEnumType()
 {
-    auto type_enum = std::make_shared<DataTypeEnum8>(
-        DataTypeEnum8::Values
-            {
-                {"Request",         static_cast<Int8>(REQUEST)},
-                {"Response",        static_cast<Int8>(RESPONSE)},
-                {"Finalize",        static_cast<Int8>(FINALIZE)},
-            });
-
-    auto op_num_enum = std::make_shared<DataTypeEnum16>(
-        DataTypeEnum16::Values
-            {
-                {"Watch",               0},
-                {"Close",               static_cast<Int16>(Coordination::OpNum::Close)},
-                {"Error",               static_cast<Int16>(Coordination::OpNum::Error)},
-                {"Create",              static_cast<Int16>(Coordination::OpNum::Create)},
-                {"Remove",              static_cast<Int16>(Coordination::OpNum::Remove)},
-                {"Exists",              static_cast<Int16>(Coordination::OpNum::Exists)},
-                {"Get",                 static_cast<Int16>(Coordination::OpNum::Get)},
-                {"Set",                 static_cast<Int16>(Coordination::OpNum::Set)},
-                {"GetACL",              static_cast<Int16>(Coordination::OpNum::GetACL)},
-                {"SetACL",              static_cast<Int16>(Coordination::OpNum::SetACL)},
-                {"SimpleList",          static_cast<Int16>(Coordination::OpNum::SimpleList)},
-                {"Sync",                static_cast<Int16>(Coordination::OpNum::Sync)},
-                {"Heartbeat",           static_cast<Int16>(Coordination::OpNum::Heartbeat)},
-                {"List",                static_cast<Int16>(Coordination::OpNum::List)},
-                {"Check",               static_cast<Int16>(Coordination::OpNum::Check)},
-                {"Multi",               static_cast<Int16>(Coordination::OpNum::Multi)},
-                {"Auth",                static_cast<Int16>(Coordination::OpNum::Auth)},
-                {"SessionID",           static_cast<Int16>(Coordination::OpNum::SessionID)},
-            });
-
-    auto error_enum = std::make_shared<DataTypeEnum8>(
+    return std::make_shared<DataTypeEnum8>(
         DataTypeEnum8::Values
             {
                 {"ZOK",                         static_cast<Int8>(Coordination::Error::ZOK)},
@@ -82,6 +52,44 @@ NamesAndTypesList ZooKeeperLogElement::getNamesAndTypes()
                 {"ZNOTHING",                    static_cast<Int8>(Coordination::Error::ZNOTHING)},
                 {"ZSESSIONMOVED",               static_cast<Int8>(Coordination::Error::ZSESSIONMOVED)},
             });
+}
+
+NamesAndTypesList ZooKeeperLogElement::getNamesAndTypes()
+{
+    auto type_enum = std::make_shared<DataTypeEnum8>(
+        DataTypeEnum8::Values
+            {
+                {"Request",         static_cast<Int8>(REQUEST)},
+                {"Response",        static_cast<Int8>(RESPONSE)},
+                {"Finalize",        static_cast<Int8>(FINALIZE)},
+            });
+
+    auto op_num_enum = std::make_shared<DataTypeEnum16>(
+        DataTypeEnum16::Values
+            {
+                {"Watch",               0},
+                {"Close",               static_cast<Int16>(Coordination::OpNum::Close)},
+                {"Error",               static_cast<Int16>(Coordination::OpNum::Error)},
+                {"Create",              static_cast<Int16>(Coordination::OpNum::Create)},
+                {"Remove",              static_cast<Int16>(Coordination::OpNum::Remove)},
+                {"Exists",              static_cast<Int16>(Coordination::OpNum::Exists)},
+                {"Get",                 static_cast<Int16>(Coordination::OpNum::Get)},
+                {"Set",                 static_cast<Int16>(Coordination::OpNum::Set)},
+                {"GetACL",              static_cast<Int16>(Coordination::OpNum::GetACL)},
+                {"SetACL",              static_cast<Int16>(Coordination::OpNum::SetACL)},
+                {"SimpleList",          static_cast<Int16>(Coordination::OpNum::SimpleList)},
+                {"Sync",                static_cast<Int16>(Coordination::OpNum::Sync)},
+                {"Heartbeat",           static_cast<Int16>(Coordination::OpNum::Heartbeat)},
+                {"List",                static_cast<Int16>(Coordination::OpNum::List)},
+                {"Check",               static_cast<Int16>(Coordination::OpNum::Check)},
+                {"Multi",               static_cast<Int16>(Coordination::OpNum::Multi)},
+                {"MultiRead",           static_cast<Int16>(Coordination::OpNum::MultiRead)},
+                {"Auth",                static_cast<Int16>(Coordination::OpNum::Auth)},
+                {"SessionID",           static_cast<Int16>(Coordination::OpNum::SessionID)},
+                {"FilteredList",        static_cast<Int16>(Coordination::OpNum::FilteredList)},
+            });
+
+    auto error_enum = getCoordinationErrorCodesEnumType();
 
     auto watch_type_enum = std::make_shared<DataTypeEnum8>(
         DataTypeEnum8::Values
@@ -110,9 +118,12 @@ NamesAndTypesList ZooKeeperLogElement::getNamesAndTypes()
         {"type", std::move(type_enum)},
         {"event_date", std::make_shared<DataTypeDate>()},
         {"event_time", std::make_shared<DataTypeDateTime64>(6)},
+        {"thread_id", std::make_shared<DataTypeUInt64>()},
+        {"query_id", std::make_shared<DataTypeString>()},
         {"address", DataTypeFactory::instance().get("IPv6")},
         {"port", std::make_shared<DataTypeUInt16>()},
         {"session_id", std::make_shared<DataTypeInt64>()},
+        {"duration_ms", std::make_shared<DataTypeUInt64>()},
 
         {"xid", std::make_shared<DataTypeInt32>()},
         {"has_watch", std::make_shared<DataTypeUInt8>()},
@@ -158,9 +169,12 @@ void ZooKeeperLogElement::appendToBlock(MutableColumns & columns) const
     auto event_time_seconds = event_time / 1000000;
     columns[i++]->insert(DateLUT::instance().toDayNum(event_time_seconds).toUnderType());
     columns[i++]->insert(event_time);
-    columns[i++]->insert(IPv6ToBinary(address.host()).data());
+    columns[i++]->insert(thread_id);
+    columns[i++]->insert(query_id);
+    columns[i++]->insertData(IPv6ToBinary(address.host()).data(), 16);
     columns[i++]->insert(address.port());
     columns[i++]->insert(session_id);
+    columns[i++]->insert(duration_ms);
 
     columns[i++]->insert(xid);
     columns[i++]->insert(has_watch);
@@ -199,4 +213,4 @@ void ZooKeeperLogElement::appendToBlock(MutableColumns & columns) const
     columns[i++]->insert(children_array);
 }
 
-};
+}

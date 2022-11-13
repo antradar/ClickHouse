@@ -23,7 +23,7 @@ namespace
 class FunctionDateTrunc : public IFunction
 {
 public:
-    static constexpr auto name = "date_trunc";
+    static constexpr auto name = "dateTrunc";
 
     explicit FunctionDateTrunc(ContextPtr context_) : context(context_) {}
 
@@ -32,6 +32,7 @@ public:
     String getName() const override { return name; }
 
     bool isVariadic() const override { return true; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return false; }
     size_t getNumberOfArguments() const override { return 0; }
 
     DataTypePtr getReturnTypeImpl(const ColumnsWithTypeAndName & arguments) const override
@@ -142,7 +143,7 @@ public:
 
     Monotonicity getMonotonicityForRange(const IDataType &, const Field &, const Field &) const override
     {
-        return { true, true, true };
+        return { .is_monotonic = true, .is_always_monotonic = true };
     }
 
 private:
@@ -152,12 +153,13 @@ private:
 
 }
 
-void registerFunctionDateTrunc(FunctionFactory & factory)
+
+REGISTER_FUNCTION(DateTrunc)
 {
-    factory.registerFunction<FunctionDateTrunc>(FunctionFactory::CaseInsensitive);
+    factory.registerFunction<FunctionDateTrunc>();
 
     /// Compatibility alias.
-    factory.registerAlias("dateTrunc", FunctionDateTrunc::name);
+    factory.registerAlias("DATE_TRUNC", "dateTrunc", FunctionFactory::CaseInsensitive);
 }
 
 }

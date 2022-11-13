@@ -1,7 +1,7 @@
 #include <Functions/IFunction.h>
 #include <Functions/FunctionFactory.h>
 #include <Interpreters/Context.h>
-#include <Access/AccessControlManager.h>
+#include <Access/AccessControl.h>
 #include <Access/User.h>
 #include <Columns/ColumnArray.h>
 #include <Columns/ColumnConst.h>
@@ -29,11 +29,13 @@ namespace
         static constexpr auto name = (kind == Kind::CURRENT_PROFILES) ? "currentProfiles" : ((kind == Kind::ENABLED_PROFILES) ? "enabledProfiles" : "defaultProfiles");
         static FunctionPtr create(const ContextPtr & context) { return std::make_shared<FunctionCurrentProfiles>(context); }
 
+        bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return false; }
+
         String getName() const override { return name; }
 
         explicit FunctionCurrentProfiles(const ContextPtr & context)
         {
-            const auto & manager = context->getAccessControlManager();
+            const auto & manager = context->getAccessControl();
 
             std::vector<UUID> profile_ids;
             if constexpr (kind == Kind::CURRENT_PROFILES)
@@ -47,8 +49,7 @@ namespace
             else
             {
                 static_assert(kind == Kind::DEFAULT_PROFILES);
-                if (auto user = context->getUser())
-                    profile_ids = user->settings.toProfileIDs();
+                profile_ids = context->getUser()->settings.toProfileIDs();
             }
 
             profile_names = manager.tryReadNames(profile_ids);
@@ -78,7 +79,7 @@ namespace
     };
 }
 
-void registerFunctionCurrentProfiles(FunctionFactory & factory)
+REGISTER_FUNCTION(CurrentProfiles)
 {
     factory.registerFunction<FunctionCurrentProfiles<Kind::CURRENT_PROFILES>>();
     factory.registerFunction<FunctionCurrentProfiles<Kind::ENABLED_PROFILES>>();

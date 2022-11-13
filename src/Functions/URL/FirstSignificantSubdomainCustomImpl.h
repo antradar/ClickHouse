@@ -20,14 +20,14 @@ namespace ErrorCodes
 struct FirstSignificantSubdomainCustomLookup
 {
     const TLDList & tld_list;
-    FirstSignificantSubdomainCustomLookup(const std::string & tld_list_name)
+    explicit FirstSignificantSubdomainCustomLookup(const std::string & tld_list_name)
         : tld_list(TLDListsHolder::getInstance().getTldList(tld_list_name))
     {
     }
 
-    bool operator()(const char *pos, size_t len) const
+    TLDType operator()(StringRef host) const
     {
-        return tld_list.has(StringRef{pos, len});
+        return tld_list.lookup(host);
     }
 };
 
@@ -40,6 +40,7 @@ public:
 
     String getName() const override { return name; }
     size_t getNumberOfArguments() const override { return 2; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     bool useDefaultImplementationForConstants() const override { return true; }
     ColumnNumbers getArgumentsThatAreAlwaysConstant() const override { return {1}; }

@@ -1,3 +1,6 @@
+---
+slug: /zh/sql-reference/functions/ip-address-functions
+---
 # IP函数 {#iphan-shu}
 
 ## IPv4NumToString(num) {#ipv4numtostringnum}
@@ -214,4 +217,4 @@ SELECT
     │ 20010438FFFF000000000000407D1BC1  │ 20010438FFFF000000000000407D1BC1 │
     └───────────────────────────────────┴──────────────────────────────────┘
 
-[来源文章](https://clickhouse.tech/docs/en/query_language/functions/ip_address_functions/) <!--hide-->
+[来源文章](https://clickhouse.com/docs/en/query_language/functions/ip_address_functions/) <!--hide-->

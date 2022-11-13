@@ -1,3 +1,6 @@
+---
+slug: /zh/operations/settings/query-complexity
+---
 # 查询复杂性的限制 {#restrictions-on-query-complexity}
 
 对查询复杂性的限制是设置的一部分。
@@ -254,4 +257,4 @@ Possible values:
 Default value: 0.
 
 
-[原始文章](https://clickhouse.tech/docs/en/operations/settings/query_complexity/) <!--hide-->
+[原始文章](https://clickhouse.com/docs/en/operations/settings/query_complexity/) <!--hide-->

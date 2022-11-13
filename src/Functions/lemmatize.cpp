@@ -1,6 +1,4 @@
-#if !defined(ARCADIA_BUILD)
-#    include "config_core.h"
-#endif
+#include "config.h"
 
 #if USE_NLP
 
@@ -79,6 +77,8 @@ public:
 
     size_t getNumberOfArguments() const override { return 2; }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
+
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
         if (!isString(arguments[0]))
@@ -120,9 +120,9 @@ public:
 
 }
 
-void registerFunctionLemmatize(FunctionFactory & factory)
+REGISTER_FUNCTION(Lemmatize)
 {
-    factory.registerFunction<FunctionLemmatize>(FunctionFactory::CaseInsensitive);
+    factory.registerFunction<FunctionLemmatize>();
 }
 
 }

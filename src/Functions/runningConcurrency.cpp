@@ -10,7 +10,7 @@
 #include <Functions/FunctionFactory.h>
 #include <Functions/IFunction.h>
 #include <IO/WriteBufferFromString.h>
-#include <common/defines.h>
+#include <base/defines.h>
 #include <set>
 
 namespace DB
@@ -43,6 +43,7 @@ namespace DB
             const typename ColVecArg::Container & vec_end   = col_end->getData();
 
             using ColVecConc = typename ConcurrencyDataType::ColumnType;
+            using FieldType = typename ConcurrencyDataType::FieldType;
             typename ColVecConc::MutablePtr col_concurrency = ColVecConc::create(input_rows_count);
             typename ColVecConc::Container & vec_concurrency = col_concurrency->getData();
 
@@ -74,7 +75,7 @@ namespace DB
                 ongoing_until.erase(
                     ongoing_until.begin(), ongoing_until.upper_bound(begin));
 
-                vec_concurrency[i] = ongoing_until.size();
+                vec_concurrency[i] = static_cast<FieldType>(ongoing_until.size());
             }
 
             return col_concurrency;
@@ -118,6 +119,8 @@ namespace DB
         {
             return true;
         }
+
+        bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     private:
         DataTypes argument_types;
@@ -218,7 +221,7 @@ namespace DB
         static constexpr auto name = "runningConcurrency";
     };
 
-    void registerFunctionRunningConcurrency(FunctionFactory & factory)
+    REGISTER_FUNCTION(RunningConcurrency)
     {
         factory.registerFunction<RunningConcurrencyOverloadResolver<NameRunningConcurrency, DataTypeUInt32>>();
     }

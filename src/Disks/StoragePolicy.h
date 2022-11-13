@@ -5,13 +5,12 @@
 #include <Disks/IDisk.h>
 #include <Disks/IVolume.h>
 #include <Disks/VolumeJBOD.h>
-#include <Disks/VolumeRAID1.h>
 #include <Disks/SingleDiskVolume.h>
 #include <IO/WriteHelpers.h>
 #include <Common/CurrentMetrics.h>
 #include <Common/Exception.h>
 #include <Common/formatReadable.h>
-#include <common/logger_useful.h>
+#include <Common/logger_useful.h>
 
 #include <memory>
 #include <mutex>
@@ -47,15 +46,12 @@ public:
     /// Returns disks ordered by volumes priority
     Disks getDisks() const override;
 
-    /// Returns disks by type ordered by volumes priority
-    Disks getDisksByType(DiskType::Type type) const override;
-
     /// Returns any disk
     /// Used when it's not important, for example for
     /// mutations files
     DiskPtr getAnyDisk() const override;
 
-    DiskPtr getDiskByName(const String & disk_name) const override;
+    DiskPtr tryGetDiskByName(const String & disk_name) const override;
 
     /// Get free space from most free disk
     UInt64 getMaxUnreservedFreeSpace() const override;
@@ -72,7 +68,7 @@ public:
     ReservationPtr reserve(UInt64 bytes, size_t min_volume_index) const override;
 
     /// Find volume index, which contains disk
-    size_t getVolumeIndexByDisk(const DiskPtr & disk_ptr) const override;
+    std::optional<size_t> tryGetVolumeIndexByDiskName(const String & disk_name) const override;
 
     /// Reserves 0 bytes on disk with max available space
     /// Do not use this function when it is possible to predict size.
@@ -87,7 +83,7 @@ public:
     /// Get volume by index.
     VolumePtr getVolume(size_t index) const override;
 
-    VolumePtr getVolumeByName(const String & volume_name) const override;
+    VolumePtr tryGetVolumeByName(const String & volume_name) const override;
 
     /// Checks if storage policy can be replaced by another one.
     void checkCompatibleWith(const StoragePolicyPtr & new_storage_policy) const override;
@@ -108,6 +104,8 @@ private:
     double move_factor = 0.1; /// by default move factor is 10%
 
     void buildVolumeIndices();
+
+    Poco::Logger * log;
 };
 
 

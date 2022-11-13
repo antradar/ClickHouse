@@ -34,6 +34,7 @@ public:
 
     size_t getNumberOfArguments() const override { return 1; }
     bool useDefaultImplementationForConstants() const override { return true; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
@@ -59,7 +60,7 @@ public:
             for (auto off : offsets)
             {
                 for (ColumnArray::Offset j = prev_off; j < off; ++j)
-                    res_values[j] = j - prev_off + 1;
+                    res_values[j] = static_cast<UInt32>(j - prev_off + 1);
                 prev_off = off;
             }
 
@@ -75,7 +76,7 @@ public:
 };
 
 
-void registerFunctionArrayEnumerate(FunctionFactory & factory)
+REGISTER_FUNCTION(ArrayEnumerate)
 {
     factory.registerFunction<FunctionArrayEnumerate>();
 }

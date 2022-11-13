@@ -1,6 +1,7 @@
 ---
-toc_priority: 31
-toc_title: "Репликация данных"
+slug: /ru/engines/table-engines/mergetree-family/replication
+sidebar_position: 31
+sidebar_label: "Репликация данных"
 ---
 
 # Репликация данных {#table_engines-replication}
@@ -31,9 +32,9 @@ ClickHouse хранит метаинформацию о репликах в [Apa
 
 Для использовании репликации, установите параметры в секции [zookeeper](../../../operations/server-configuration-parameters/settings.md#server-settings_zookeeper) конфигурации сервера.
 
-!!! attention "Внимание"
+    :::note "Внимание"
     Не пренебрегайте настройками безопасности. ClickHouse поддерживает [ACL схему](https://zookeeper.apache.org/doc/current/zookeeperProgrammers.html#sc_ZooKeeperAccessControl) `digest` подсистемы безопасности ZooKeeper.
-
+    :::
 Пример указания адресов кластера ZooKeeper:
 
 ``` xml
@@ -102,7 +103,7 @@ CREATE TABLE table_name
 ) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/{layer}-{shard}/table_name', '{replica}', ver)
 PARTITION BY toYYYYMM(EventDate)
 ORDER BY (CounterID, EventDate, intHash32(UserID))
-SAMPLE BY intHash32(UserID)
+SAMPLE BY intHash32(UserID);
 ```
 
 <details markdown="1">
@@ -115,12 +116,12 @@ CREATE TABLE table_name
     EventDate DateTime,
     CounterID UInt32,
     UserID UInt32
-) ENGINE = ReplicatedMergeTree('/clickhouse/tables/{layer}-{shard}/table_name', '{replica}', EventDate, intHash32(UserID), (CounterID, EventDate, intHash32(UserID), EventTime), 8192)
+) ENGINE = ReplicatedMergeTree('/clickhouse/tables/{layer}-{shard}/table_name', '{replica}', EventDate, intHash32(UserID), (CounterID, EventDate, intHash32(UserID), EventTime), 8192);
 ```
 
 </details>
 
-Как видно в примере, эти параметры могут содержать подстановки в фигурных скобках. Подставляемые значения достаются из конфигурационного файла, из секции «[macros](../../../operations/server-configuration-parameters/settings/#macros)».
+Как видно в примере, эти параметры могут содержать подстановки в фигурных скобках. Эти подстановки заменяются на соответствующие значения из конфигурационного файла, из секции [macros](../../../operations/server-configuration-parameters/settings.md#macros).
 
 Пример:
 
@@ -253,4 +254,5 @@ $ sudo -u clickhouse touch /var/lib/clickhouse/flags/force_restore_data
 -   [background_schedule_pool_size](../../../operations/settings/settings.md#background_schedule_pool_size)
 -   [background_fetches_pool_size](../../../operations/settings/settings.md#background_fetches_pool_size)
 -   [execute_merges_on_single_replica_time_threshold](../../../operations/settings/settings.md#execute-merges-on-single-replica-time-threshold)
-
+-   [max_replicated_fetches_network_bandwidth](../../../operations/settings/merge-tree-settings.md#max_replicated_fetches_network_bandwidth)
+-   [max_replicated_sends_network_bandwidth](../../../operations/settings/merge-tree-settings.md#max_replicated_sends_network_bandwidth)

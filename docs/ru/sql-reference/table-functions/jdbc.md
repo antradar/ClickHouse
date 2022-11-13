@@ -1,6 +1,7 @@
 ---
-toc_priority: 43
-toc_title: jdbc
+slug: /ru/sql-reference/table-functions/jdbc
+sidebar_position: 43
+sidebar_label: jdbc
 ---
 
 # jdbc {#jdbc}
@@ -35,4 +36,4 @@ FROM jdbc('mysql-dev?datasource_column', 'show databases') a
 INNER JOIN jdbc('self?datasource_column', 'show databases') b ON a.Database = b.name
 ```
 
-[Оригинальная статья](https://clickhouse.tech/docs/en/query_language/table_functions/jdbc/) <!--hide-->
+[Оригинальная статья](https://clickhouse.com/docs/en/query_language/table_functions/jdbc/) <!--hide-->

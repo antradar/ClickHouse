@@ -1,15 +1,16 @@
 ---
-toc_priority: 37
-toc_title: Logical
+slug: /en/sql-reference/functions/logical-functions
+sidebar_position: 37
+sidebar_label: Logical
 ---
 
-# Logical Functions {#logical-functions}
+# Logical Functions
 
 Performs logical operations on arguments of any numeric types, but returns a [UInt8](../../sql-reference/data-types/int-uint.md) number equal to 0, 1 or `NULL` in some cases.
 
 Zero as an argument is considered `false`, while any non-zero value is considered `true`.
 
-## and {#logical-and-function}
+## and
 
 Calculates the result of the logical conjunction between two or more values. Corresponds to [Logical AND Operator](../../sql-reference/operators/index.md#logical-and-operator).
 
@@ -18,6 +19,8 @@ Calculates the result of the logical conjunction between two or more values. Cor
 ``` sql
 and(val1, val2...)
 ```
+
+You can use the [short_circuit_function_evaluation](../../operations/settings/settings.md#short-circuit-function-evaluation) setting to calculate the `and` function according to a short scheme. If this setting is enabled, `vali` is evaluated only on rows where `(val1 AND val2 AND ... AND val{i-1})` is true. For example, an exception about division by zero is not thrown when executing the query `SELECT and(number = 2, intDiv(1, number)) FROM numbers(10)`.
 
 **Arguments**
 
@@ -61,15 +64,17 @@ Result:
 └──────────────────────┘
 ```
 
-## or {#logical-or-function}
+## or
 
 Calculates the result of the logical disjunction between two or more values. Corresponds to [Logical OR Operator](../../sql-reference/operators/index.md#logical-or-operator).
 
 **Syntax**
 
 ``` sql
-and(val1, val2...)
+or(val1, val2...)
 ```
+
+You can use the [short_circuit_function_evaluation](../../operations/settings/settings.md#short-circuit-function-evaluation) setting to calculate the `or` function according to a short scheme. If this setting is enabled, `vali` is evaluated only on rows where `((NOT val1) AND (NOT val2) AND ... AND (NOT val{i-1}))` is true. For example, an exception about division by zero is not thrown when executing the query `SELECT or(number = 0, intDiv(1, number) != 0) FROM numbers(10)`.
 
 **Arguments**
 
@@ -113,7 +118,7 @@ Result:
 └─────────────┘
 ```
 
-## not {#logical-not-function}
+## not
 
 Calculates the result of the logical negation of the value. Corresponds to [Logical Negation Operator](../../sql-reference/operators/index.md#logical-negation-operator).
 
@@ -151,7 +156,7 @@ Result:
 └────────┘
 ```
 
-## xor {#logical-xor-function}
+## xor
 
 Calculates the result of the logical exclusive disjunction between two or more values. For more than two values the function works as if it calculates `XOR` of the first two values and then uses the result with the next value to calculate `XOR` and so on.
 

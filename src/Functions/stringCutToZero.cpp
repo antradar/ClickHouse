@@ -27,6 +27,8 @@ public:
 
     size_t getNumberOfArguments() const override { return 1; }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
+
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
         if (!isStringOrFixedString(arguments[0]))
@@ -146,7 +148,7 @@ public:
 };
 
 
-void registerFunctionToStringCutToZero(FunctionFactory & factory)
+REGISTER_FUNCTION(ToStringCutToZero)
 {
     factory.registerFunction<FunctionToStringCutToZero>();
 }

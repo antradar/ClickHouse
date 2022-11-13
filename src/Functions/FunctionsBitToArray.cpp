@@ -8,6 +8,7 @@
 #include <Functions/IFunction.h>
 #include <IO/WriteBufferFromVector.h>
 #include <IO/WriteHelpers.h>
+#include <bit>
 
 
 namespace DB
@@ -45,6 +46,7 @@ public:
 
     size_t getNumberOfArguments() const override { return 1; }
     bool isInjective(const ColumnsWithTypeAndName &) const override { return true; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
@@ -92,7 +94,7 @@ private:
             if (!first)
                 writeChar(',', out);
             first = false;
-            writeIntText(T(bit), out);
+            writeIntText(static_cast<T>(bit), out);
         }
     }
 
@@ -141,6 +143,7 @@ public:
 
     size_t getNumberOfArguments() const override { return 1; }
     bool isInjective(const ColumnsWithTypeAndName &) const override { return true; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
@@ -227,6 +230,7 @@ public:
 
     size_t getNumberOfArguments() const override { return 1; }
     bool isInjective(const ColumnsWithTypeAndName &) const override { return true; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
@@ -282,7 +286,7 @@ public:
             {
                 while (x)
                 {
-                    result_array_values_data.push_back(getTrailingZeroBitsUnsafe(x));
+                    result_array_values_data.push_back(std::countr_zero(x));
                     x &= (x - 1);
                 }
             }
@@ -326,7 +330,7 @@ public:
 
 }
 
-void registerFunctionsBitToArray(FunctionFactory & factory)
+REGISTER_FUNCTION(BitToArray)
 {
     factory.registerFunction<FunctionBitPositionsToArray>();
     factory.registerFunction<FunctionBitmaskToArray>();

@@ -1,10 +1,11 @@
 ---
-toc_folder_title: Settings
-toc_priority: 55
-toc_title: Introduction
+sidebar_label: Settings
+sidebar_position: 51
+slug: /en/operations/settings/
+pagination_next: en/operations/settings/settings
 ---
 
-# Settings {#session-settings-intro}
+# Settings Overview
 
 There are multiple ways to make all the settings described in this section of documentation.
 
@@ -55,4 +56,4 @@ SELECT getSetting('custom_a');
 
 -   [Server Configuration Settings](../../operations/server-configuration-parameters/settings.md)
 
-[Original article](https://clickhouse.tech/docs/en/operations/settings/) <!--hide-->
+[Original article](https://clickhouse.com/docs/en/operations/settings/) <!--hide-->

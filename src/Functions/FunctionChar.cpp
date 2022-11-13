@@ -30,6 +30,7 @@ public:
 
     bool isVariadic() const override { return true; }
     bool isInjective(const ColumnsWithTypeAndName &) const override { return true; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return false; }
     size_t getNumberOfArguments() const override { return 0; }
 
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
@@ -112,9 +113,9 @@ private:
     }
 };
 
-void registerFunctionChar(FunctionFactory & factory)
+REGISTER_FUNCTION(Char)
 {
-    factory.registerFunction<FunctionChar>(FunctionFactory::CaseInsensitive);
+    factory.registerFunction<FunctionChar>({}, FunctionFactory::CaseInsensitive);
 }
 
 }

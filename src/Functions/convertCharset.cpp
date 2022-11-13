@@ -1,6 +1,4 @@
-#if !defined(ARCADIA_BUILD)
-#    include "config_core.h"
-#endif
+#include "config.h"
 
 #if USE_ICU
 #    include <Columns/ColumnConst.h>
@@ -12,7 +10,7 @@
 #    include <IO/WriteHelpers.h>
 #    include <Common/ObjectPool.h>
 #    include <Common/typeid_cast.h>
-#    include <common/range.h>
+#    include <base/range.h>
 
 #    include <memory>
 #    include <string>
@@ -171,6 +169,8 @@ public:
 
     size_t getNumberOfArguments() const override { return 3; }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
+
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
         for (size_t i : collections::range(0, 3))
@@ -214,7 +214,7 @@ public:
 
 }
 
-void registerFunctionConvertCharset(FunctionFactory & factory)
+REGISTER_FUNCTION(ConvertCharset)
 {
     factory.registerFunction<FunctionConvertCharset>();
 }

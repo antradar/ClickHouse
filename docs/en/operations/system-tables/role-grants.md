@@ -1,4 +1,7 @@
-#system.role_grants {#system_tables-role_grants}
+---
+slug: /en/operations/system-tables/role-grants
+---
+# role_grants 
 
 Contains the role grants for users and roles. To add entries to this table, use `GRANT role TO user`.
 
@@ -18,4 +21,4 @@ Columns:
     -   1 — The role has `ADMIN OPTION` privilege.
     -   0 — The role without `ADMIN OPTION` privilege.
 
-[Original article](https://clickhouse.tech/docs/en/operations/system-tables/role-grants) <!--hide-->
+[Original article](https://clickhouse.com/docs/en/operations/system-tables/role-grants) <!--hide-->

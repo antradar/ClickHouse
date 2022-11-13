@@ -30,6 +30,7 @@ public:
     bool useDefaultImplementationForNulls() const override { return false; }
     bool useDefaultImplementationForConstants() const override { return true; }
     bool useDefaultImplementationForLowCardinalityColumns() const override { return false; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return false; }
 
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
@@ -56,7 +57,7 @@ public:
 
 }
 
-void registerFunctionLowCardinalityIndices(FunctionFactory & factory)
+REGISTER_FUNCTION(LowCardinalityIndices)
 {
     factory.registerFunction<FunctionLowCardinalityIndices>();
 }

@@ -1,3 +1,6 @@
+---
+slug: /zh/sql-reference/data-types/fixedstring
+---
 # 固定字符串 {#fixedstring}
 
 固定长度 N 的字符串（N 必须是严格的正自然数）。
@@ -53,4 +56,4 @@ WHERE a = 'b\0'
 
 请注意，`FixedString(N)`的长度是个常量。仅由空字符组成的字符串，函数[length](../../sql-reference/functions/array-functions.md#array_functions-length)返回值为`N`,而函数[empty](../../sql-reference/functions/string-functions.md#empty)的返回值为`1`。
 
-[来源文章](https://clickhouse.tech/docs/en/data_types/fixedstring/) <!--hide-->
+[来源文章](https://clickhouse.com/docs/en/data_types/fixedstring/) <!--hide-->

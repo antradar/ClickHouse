@@ -45,6 +45,8 @@ public:
         return false;
     }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return false; }
+
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
         const DataTypeArray * arr = checkAndGetDataType<DataTypeArray>(arguments[0].get());
@@ -67,7 +69,7 @@ public:
 };
 
 
-void registerFunctionArrayJoin(FunctionFactory & factory)
+REGISTER_FUNCTION(ArrayJoin)
 {
     factory.registerFunction<FunctionArrayJoin>();
 }

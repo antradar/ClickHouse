@@ -98,6 +98,14 @@ MergeTreeIndexFactory::MergeTreeIndexFactory()
 
     registerCreator("bloom_filter", bloomFilterIndexCreatorNew);
     registerValidator("bloom_filter", bloomFilterIndexValidatorNew);
+
+    registerCreator("hypothesis", hypothesisIndexCreator);
+    registerValidator("hypothesis", hypothesisIndexValidator);
+
+#ifdef ENABLE_ANNOY
+    registerCreator("annoy", annoyIndexCreator);
+    registerValidator("annoy", annoyIndexValidator);
+#endif
 }
 
 MergeTreeIndexFactory & MergeTreeIndexFactory::instance()

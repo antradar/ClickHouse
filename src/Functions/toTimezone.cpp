@@ -45,6 +45,8 @@ public:
 
     String getName() const override { return "toTimezone"; }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return false; }
+
     const DataTypes & getArgumentTypes() const override
     {
         return argument_types;
@@ -64,7 +66,8 @@ public:
 
     Monotonicity getMonotonicityForRange(const IDataType & /*type*/, const Field & /*left*/, const Field & /*right*/) const override
     {
-        return {is_constant_timezone, is_constant_timezone, is_constant_timezone};
+        const bool b = is_constant_timezone;
+        return { .is_monotonic = b, .is_positive = b, .is_always_monotonic = b, .is_strict = b };
     }
 
 private:
@@ -120,7 +123,7 @@ public:
 
 }
 
-void registerFunctionToTimeZone(FunctionFactory & factory)
+REGISTER_FUNCTION(ToTimeZone)
 {
     factory.registerFunction<ToTimeZoneOverloadResolver>();
     factory.registerAlias("toTimeZone", "toTimezone");

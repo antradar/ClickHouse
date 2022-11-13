@@ -7,7 +7,7 @@
 #include <Common/UTF8Helpers.h>
 #include <Common/randomSeed.h>
 
-#include <common/defines.h>
+#include <base/defines.h>
 
 namespace DB
 {
@@ -48,6 +48,7 @@ public:
 
     bool isDeterministic() const override { return false; }
     bool isDeterministicInScopeOfQuery() const override { return false; }
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return false; }
 
     ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override
     {
@@ -115,8 +116,8 @@ public:
             {
                 UInt64 rand = rng();
 
-                UInt32 code_point1 = generate_code_point(rand);
-                UInt32 code_point2 = generate_code_point(rand >> 32);
+                UInt32 code_point1 = generate_code_point(static_cast<UInt32>(rand));
+                UInt32 code_point2 = generate_code_point(static_cast<UInt32>(rand >> 32u));
 
                 /// We have padding in column buffers that we can overwrite.
                 size_t length1 = UTF8::convertCodePointToUTF8(code_point1, pos, sizeof(int));
@@ -147,7 +148,7 @@ public:
 
 }
 
-void registerFunctionRandomStringUTF8(FunctionFactory & factory)
+REGISTER_FUNCTION(RandomStringUTF8)
 {
     factory.registerFunction<FunctionRandomStringUTF8>();
 }

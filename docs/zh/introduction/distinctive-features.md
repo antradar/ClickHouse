@@ -1,6 +1,7 @@
 ---
-toc_priority: 2
-toc_title: ClickHouse的特性
+slug: /zh/introduction/distinctive-features
+sidebar_position: 2
+sidebar_label: ClickHouse的特性
 ---
 
 # ClickHouse的特性 {#clickhouse-de-te-xing}
@@ -66,7 +67,7 @@ ClickHouse提供各种各样在允许牺牲数据精度的情况下对查询进�
 2.  基于数据的部分样本进行近似查询。这时，仅会从磁盘检索少部分比例的数据。
 3.  不使用全部的聚合条件，通过随机选择有限个数据聚合条件进行聚合。这在数据聚合条件满足某些分布条件下，在提供相当准确的聚合结果的同时降低了计算资源的使用。
 
-## Adaptive Join Algorithm {#adaptive-join-algorithm}
+## 自适应连接算法 {#adaptive-join-algorithm}
 
 ClickHouse支持自定义[JOIN](../sql-reference/statements/select/join.md)多个表，它更倾向于散列连接算法，如果有多个大表，则使用合并-连接算法
 
@@ -86,4 +87,4 @@ ClickHouse使用SQL查询实现用户帐户管理，并允许[角色的访问控
 2.  缺少高频率，低延迟的修改或删除已存在数据的能力。仅能用于批量删除或修改数据，但这符合 [GDPR](https://gdpr-info.eu)。
 3.  稀疏索引使得ClickHouse不适合通过其键检索单行的点查询。
 
-[来源文章](https://clickhouse.tech/docs/en/introduction/distinctive_features/) <!--hide-->
+[来源文章](https://clickhouse.com/docs/en/introduction/distinctive_features/) <!--hide-->

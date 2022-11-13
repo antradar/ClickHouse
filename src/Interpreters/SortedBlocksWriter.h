@@ -6,10 +6,9 @@
 #include <Common/filesystemHelpers.h>
 #include <Core/Block.h>
 #include <Core/SortDescription.h>
-#include <Processors/Pipe.h>
-#include <DataStreams/SizeLimits.h>
-#include <DataStreams/IBlockStream_fwd.h>
-
+#include <QueryPipeline/Pipe.h>
+#include <QueryPipeline/SizeLimits.h>
+#include <Disks/TemporaryFileOnDisk.h>
 
 namespace DB
 {
@@ -25,7 +24,7 @@ using VolumePtr = std::shared_ptr<IVolume>;
 
 struct SortedBlocksWriter
 {
-    using TmpFilePtr = std::unique_ptr<TemporaryFile>;
+    using TmpFilePtr = TemporaryFileOnDiskHolder;
     using SortedFiles = std::vector<TmpFilePtr>;
 
     struct Blocks

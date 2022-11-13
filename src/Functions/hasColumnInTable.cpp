@@ -56,6 +56,8 @@ public:
 
     bool isDeterministic() const override { return false; }
 
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return false; }
+
     ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override;
 };
 
@@ -148,12 +150,12 @@ ColumnPtr FunctionHasColumnInTable::executeImpl(const ColumnsWithTypeAndName & a
         has_column = remote_columns.hasPhysical(column_name);
     }
 
-    return DataTypeUInt8().createColumnConst(input_rows_count, Field{UInt64(has_column)});
+    return DataTypeUInt8().createColumnConst(input_rows_count, Field{static_cast<UInt64>(has_column)});
 }
 
 }
 
-void registerFunctionHasColumnInTable(FunctionFactory & factory)
+REGISTER_FUNCTION(HasColumnInTable)
 {
     factory.registerFunction<FunctionHasColumnInTable>();
 }

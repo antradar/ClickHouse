@@ -1,10 +1,13 @@
 ---
-toc_title: ORDER BY
+slug: /ru/sql-reference/statements/select/order-by
+sidebar_label: ORDER BY
 ---
 
 # Секция ORDER BY {#select-order-by}
 
-Секция `ORDER BY` содержит список выражений, к каждому из которых также может быть приписано `DESC` или `ASC` (направление сортировки). Если ничего не приписано - это аналогично приписыванию `ASC`. `ASC` - сортировка по возрастанию, `DESC` - сортировка по убыванию. Обозначение направления сортировки действует на одно выражение, а не на весь список. Пример: `ORDER BY Visits DESC, SearchPhrase`
+Секция `ORDER BY` содержит список выражений, к каждому из которых также может быть приписано `DESC` или `ASC` (направление сортировки). Если ничего не приписано - это аналогично приписыванию `ASC`. `ASC` - сортировка по возрастанию, `DESC` - сортировка по убыванию. Обозначение направления сортировки действует на одно выражение, а не на весь список. Пример: `ORDER BY Visits DESC, SearchPhrase`.
+
+Если вы хотите для сортировки данных указывать номера столбцов, а не названия, включите настройку [enable_positional_arguments](../../../operations/settings/settings.md#enable-positional-arguments).
 
 Строки, для которых список выражений, по которым производится сортировка, принимает одинаковые значения, выводятся в произвольном порядке, который может быть также недетерминированным (каждый раз разным).
 Если секция ORDER BY отсутствует, то, аналогично, порядок, в котором идут строки, не определён, и может быть недетерминированным.
@@ -269,7 +272,7 @@ SELECT * FROM collate_test ORDER BY s ASC COLLATE 'en';
 
 ## Модификатор ORDER BY expr WITH FILL  {#orderby-with-fill}
 
-Этот модификатор также может быть скобинирован с модификатором [LIMIT ... WITH TIES](../../../sql-reference/statements/select/limit.md#limit-with-ties)
+Этот модификатор также может быть скомбинирован с модификатором [LIMIT ... WITH TIES](../../../sql-reference/statements/select/limit.md#limit-with-ties)
 
 Модификатор `WITH FILL` может быть установлен после `ORDER BY expr` с опциональными параметрами `FROM expr`, `TO expr` и `STEP expr`. 
 Все пропущенные значения для колонки `expr` будут заполнены значениями, соответствующими предполагаемой последовательности значений колонки, другие колонки будут заполнены значениями по умолчанию.
@@ -278,6 +281,7 @@ SELECT * FROM collate_test ORDER BY s ASC COLLATE 'en';
 
 ```sql
 ORDER BY expr [WITH FILL] [FROM const_expr] [TO const_expr] [STEP const_numeric_expr], ... exprN [WITH FILL] [FROM expr] [TO expr] [STEP numeric_expr]
+[INTERPOLATE [(col [AS expr], ... colN [AS exprN])]]
 ```
 
 `WITH FILL` может быть применен к полям с числовыми (все разновидности float, int, decimal) или временными (все разновидности Date, DateTime) типами. В случае применения к полям типа `String` недостающие значения заполняются пустой строкой.
@@ -286,6 +290,8 @@ ORDER BY expr [WITH FILL] [FROM const_expr] [TO const_expr] [STEP const_numeric_
 Когда `STEP const_numeric_expr` определен, `const_numeric_expr` интерпретируется "как есть" для числовых типов, как "дни" для типа `Date` и как "секунды" для типа `DateTime`. 
 
 Когда `STEP const_numeric_expr` не указан, тогда используется `1.0` для числовых типов, `1 день` для типа Date и `1 секунда` для типа DateTime.
+
+`INTERPOLATE` может быть применен к колонкам, не участвующим в `ORDER BY WITH FILL`. Такие колонки заполняются значениями, вычисляемыми применением `expr` к предыдущему значению. Если `expr` опущен, то колонка заполняется предыдущим значением. Если список колонок не указан, то включаются все разрешенные колонки.
 
 Пример запроса без использования `WITH FILL`:
 ```sql
@@ -393,3 +399,58 @@ ORDER BY
 │ 1970-03-12 │ 1970-01-08 │ original │
 └────────────┴────────────┴──────────┘
 ```
+
+Пример запроса без `INTERPOLATE`:
+
+``` sql
+SELECT n, source, inter FROM (
+   SELECT toFloat32(number % 10) AS n, 'original' AS source, number as inter
+   FROM numbers(10) WHERE number % 3 = 1
+) ORDER BY n WITH FILL FROM 0 TO 5.51 STEP 0.5;
+```
+
+Результат:
+``` text
+┌───n─┬─source───┬─inter─┐
+│   0 │          │     0 │
+│ 0.5 │          │     0 │
+│   1 │ original │     1 │
+│ 1.5 │          │     0 │
+│   2 │          │     0 │
+│ 2.5 │          │     0 │
+│   3 │          │     0 │
+│ 3.5 │          │     0 │
+│   4 │ original │     4 │
+│ 4.5 │          │     0 │
+│   5 │          │     0 │
+│ 5.5 │          │     0 │
+│   7 │ original │     7 │
+└─────┴──────────┴───────┘
+```
+
+Тот же запрос с `INTERPOLATE`:
+
+``` sql
+SELECT n, source, inter FROM (
+   SELECT toFloat32(number % 10) AS n, 'original' AS source, number as inter
+   FROM numbers(10) WHERE number % 3 = 1
+) ORDER BY n WITH FILL FROM 0 TO 5.51 STEP 0.5 INTERPOLATE (inter AS inter + 1);
+```
+
+Результат:
+``` text
+┌───n─┬─source───┬─inter─┐
+│   0 │          │     0 │
+│ 0.5 │          │     0 │
+│   1 │ original │     1 │
+│ 1.5 │          │     2 │
+│   2 │          │     3 │
+│ 2.5 │          │     4 │
+│   3 │          │     5 │
+│ 3.5 │          │     6 │
+│   4 │ original │     4 │
+│ 4.5 │          │     5 │
+│   5 │          │     6 │
+│ 5.5 │          │     7 │
+│   7 │ original │     7 │
+└─────┴──────────┴───────┘

@@ -3,7 +3,7 @@
 #include <city.h>
 #include <type_traits>
 
-#include <common/bit_cast.h>
+#include <base/bit_cast.h>
 
 #include <IO/WriteHelpers.h>
 #include <IO/ReadHelpers.h>
@@ -175,8 +175,9 @@ struct OneAdder
         {
             if constexpr (!std::is_same_v<T, String>)
             {
+                using ValueType = typename decltype(data.set)::value_type;
                 const auto & value = assert_cast<const ColumnVector<T> &>(column).getElement(row_num);
-                data.set.insert(AggregateFunctionUniqTraits<T>::hash(value));
+                data.set.insert(static_cast<ValueType>(AggregateFunctionUniqTraits<T>::hash(value)));
             }
             else
             {
@@ -237,17 +238,26 @@ public:
         detail::OneAdder<T, Data>::add(this->data(place), *columns[0], row_num);
     }
 
+    void addManyDefaults(
+        AggregateDataPtr __restrict place,
+        const IColumn ** columns,
+        size_t /*length*/,
+        Arena * /*arena*/) const override
+    {
+        detail::OneAdder<T, Data>::add(this->data(place), *columns[0], 0);
+    }
+
     void merge(AggregateDataPtr __restrict place, ConstAggregateDataPtr rhs, Arena *) const override
     {
         this->data(place).set.merge(this->data(rhs).set);
     }
 
-    void serialize(ConstAggregateDataPtr __restrict place, WriteBuffer & buf) const override
+    void serialize(ConstAggregateDataPtr __restrict place, WriteBuffer & buf, std::optional<size_t> /* version */) const override
     {
         this->data(place).set.write(buf);
     }
 
-    void deserialize(AggregateDataPtr __restrict place, ReadBuffer & buf, Arena *) const override
+    void deserialize(AggregateDataPtr __restrict place, ReadBuffer & buf, std::optional<size_t> /* version */, Arena *) const override
     {
         this->data(place).set.read(buf);
     }
@@ -299,12 +309,12 @@ public:
         this->data(place).set.merge(this->data(rhs).set);
     }
 
-    void serialize(ConstAggregateDataPtr __restrict place, WriteBuffer & buf) const override
+    void serialize(ConstAggregateDataPtr __restrict place, WriteBuffer & buf, std::optional<size_t> /* version */) const override
     {
         this->data(place).set.write(buf);
     }
 
-    void deserialize(AggregateDataPtr __restrict place, ReadBuffer & buf, Arena *) const override
+    void deserialize(AggregateDataPtr __restrict place, ReadBuffer & buf, std::optional<size_t> /* version */, Arena *) const override
     {
         this->data(place).set.read(buf);
     }

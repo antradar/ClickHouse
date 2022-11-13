@@ -1,6 +1,4 @@
-#if !defined(ARCADIA_BUILD)
-#    include "config_core.h"
-#endif
+#include "config.h"
 
 #if USE_NLP
 
@@ -53,8 +51,8 @@ struct StemImpl
             /// Note that accessing -1th element is valid for PaddedPODArray.
             size_t original_size = offsets[i] - offsets[i - 1];
             const sb_symbol * result = sb_stemmer_stem(stemmer,
-                                                       reinterpret_cast<const uint8_t *>(data.data() + offsets[i - 1]),
-                                                       original_size - 1);
+                reinterpret_cast<const uint8_t *>(data.data() + offsets[i - 1]),
+                static_cast<int>(original_size - 1));
             size_t new_size = sb_stemmer_length(stemmer) + 1;
 
             memcpy(res_data.data() + data_size, result, new_size);
@@ -84,6 +82,8 @@ public:
     String getName() const override { return name; }
 
     size_t getNumberOfArguments() const override { return 2; }
+
+    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }
 
     DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override
     {
@@ -125,9 +125,9 @@ public:
 
 }
 
-void registerFunctionStem(FunctionFactory & factory)
+REGISTER_FUNCTION(Stem)
 {
-    factory.registerFunction<FunctionStem>(FunctionFactory::CaseInsensitive);
+    factory.registerFunction<FunctionStem>();
 }
 
 }
